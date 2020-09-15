@@ -4,18 +4,20 @@
 # original author:https://github.com/gongzili456
 # modified by:https://github.com/haoel
 
-# Ubuntu 18.04 系统环境
+# OS: Ubuntu 18.04
 
 COLOR_ERROR="\e[38;5;198m"
 COLOR_NONE="\e[0m"
 COLOR_SUCC="\e[92m"
 
 update_core(){
-    echo -e "${COLOR_ERROR}当前系统内核版本太低 <$VERSION_CURR>,需要更新系统内核.${COLOR_NONE}"
+    #echo -e "${COLOR_ERROR}当前系统内核版本太低 <$VERSION_CURR>,需要更新系统内核.${COLOR_NONE}"
+    echo -e "${COLOR_ERROR}The current kernel version is too low <$VERSION_CURR>. Update the OS kernel.${COLOR_NONE}"
     sudo apt install -y -qq --install-recommends linux-generic-hwe-18.04
     sudo apt autoremove
 
-    echo -e "${COLOR_SUCC}内核更新完成,重新启动机器...${COLOR_NONE}"
+    #echo -e "${COLOR_SUCC}内核更新完成,重新启动机器...${COLOR_NONE}"
+    echo -e "${COLOR_SUCC}Complete updating the kernel. Now reboot...${COLOR_NONE}"
     sudo reboot
 }
 
@@ -24,14 +26,16 @@ check_bbr(){
 
     # 如果已经发现 bbr 进程
     if [ -n "$has_bbr" ] ;then
-        echo -e "${COLOR_SUCC}TCP BBR 拥塞控制算法已经启动${COLOR_NONE}"
+        #echo -e "${COLOR_SUCC}TCP BBR 拥塞控制算法已经启动${COLOR_NONE}"
+        echo -e "${COLOR_SUCC}TCP BBR algo is up running.${COLOR_NONE}"
     else
         start_bbr
     fi
 }
 
 start_bbr(){
-    echo "启动 TCP BBR 拥塞控制算法"
+    #echo "启动 TCP BBR 拥塞控制算法"
+    echo "Start TCP BBR algo"
     sudo modprobe tcp_bbr
     echo "tcp_bbr" | sudo tee --append /etc/modules-load.d/modules.conf
     echo "net.core.default_qdisc=fq" | sudo tee --append /etc/sysctl.conf
@@ -52,7 +56,8 @@ install_bbr() {
 
 install_docker() {
     if ! [ -x "$(command -v docker)" ]; then
-        echo "开始安装 Docker CE"
+        #echo "开始安装 Docker CE"
+        echo "Start installing Docker CE"
         curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
         sudo add-apt-repository \
             "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
@@ -61,7 +66,8 @@ install_docker() {
         sudo apt-get update -qq
         sudo apt-get install -y docker-ce
     else
-        echo -e "${COLOR_SUCC}Docker CE 已经安装成功了${COLOR_NONE}"
+        #echo -e "${COLOR_SUCC}Docker CE 已经安装成功了${COLOR_NONE}"
+        echo -e "${COLOR_SUCC}Docker CE installed successfully.${COLOR_NONE}"
     fi
 }
 
@@ -78,7 +84,8 @@ check_container(){
 }
 
 install_certbot() {
-    echo "开始安装 certbot 命令行工具"
+    #echo "开始安装 certbot 命令行工具"
+    echo "Start installing certbot command line tool..."
     sudo apt-get update -qq
     sudo apt-get install -y software-properties-common
     sudo add-apt-repository universe
@@ -92,39 +99,52 @@ create_cert() {
         install_certbot
     fi
 
-    echo "开始生成 SSL 证书"
-    echo -e "${COLOR_ERROR}注意：生成证书前,需要将域名指向一个有效的 IP,否则无法创建证书.${COLOR_NONE}"
-    read -p "是否已经将域名指向了 IP？[Y/n]" has_record
+    #echo "开始生成 SSL 证书"
+    echo "Start generating SSL keys"
+    #echo -e "${COLOR_ERROR}注意：生成证书前,需要将域名指向一个有效的 IP,否则无法创建证书.${COLOR_NONE}"
+    echo -e "${COLOR_ERROR}Note: Before generating keys, the Domain Names should points to a valid IP. Or the keys generation would fail...${COLOR_NONE}"
+    #read -p "是否已经将域名指向了 IP？[Y/n]" has_record
+    read -p "Has the domain name pointed to an IP？[Y/n]" has_record
 
     if ! [[ "$has_record" = "Y" ]] ;then
-        echo "请操作完成后再继续."
+        #echo "请操作完成后再继续."
+        echo "Please fulfill the prerequisite firstly."
         return
     fi
 
-    read -p "请输入你要使用的域名:" domain
+    #read -p "请输入你要使用的域名:" domain
+    read -p "Please input the domain name:" domain
 
     sudo certbot certonly --standalone -d $domain
 }
 
 install_gost() {
     if ! [ -x "$(command -v docker)" ]; then
-        echo -e "${COLOR_ERROR}未发现Docker，请求安装 Docker ! ${COLOR_NONE}" 
+        #echo -e "${COLOR_ERROR}未发现Docker，请求安装 Docker ! ${COLOR_NONE}" 
+        echo -e "${COLOR_ERROR}No Docker found，Please firstly install Docker ! ${COLOR_NONE}" 
         return
     fi
 
     if check_container gost ; then
-        echo -e "${COLOR_ERROR}Gost 容器已经在运行了，你可以手动停止容器，并删除容器，然后再执行本命令来重新安装 Gost。 ${COLOR_NONE}"
+        #echo -e "${COLOR_ERROR}Gost 容器已经在运行了，你可以手动停止容器，并删除容器，然后再执行本命令来重新安装 Gost。 ${COLOR_NONE}"
+        echo -e "${COLOR_ERROR}Gost container is running. Please manually stop the container, then delete the container. Afterwards, re-execute the commands to re-install Gost. ${COLOR_NONE}"
         return
     fi
 
-    echo "准备启动 Gost 代理程序,为了安全,需要使用用户名与密码进行认证."
-    read -p "请输入你要使用的域名：" DOMAIN
-    read -p "请输入你要使用的用户名:" USER
-    read -p "请输入你要使用的密码:" PASS
-    read -p "请输入HTTP/2需要侦听的端口号(443)：" PORT 
+    #echo "准备启动 Gost 代理程序,为了安全,需要使用用户名与密码进行认证."
+    echo "Prepare to start Gost. For safty, it requires your username/password."
+    #read -p "请输入你要使用的域名：" DOMAIN
+    read -p "Please input the domain name：" DOMAIN
+    #read -p "请输入你要使用的用户名:" USER
+    read -p "Please input username:" USER
+    #read -p "请输入你要使用的密码:" PASS
+    read -p "Password:" PASS
+    #read -p "请输入HTTP/2需要侦听的端口号(443)：" PORT 
+    read -p "Please input the port# that HTTP/2 listens to：" PORT 
 
     if [[ -z "${PORT// }" ]] || ! [[ "${PORT}" =~ ^[0-9]+$ ]] || ! [ "$PORT" -ge 1 -a "$PORT" -le 655535 ]; then
-        echo -e "${COLOR_ERROR}非法端口,使用默认端口 443 !${COLOR_NONE}"
+        #echo -e "${COLOR_ERROR}非法端口,使用默认端口 443 !${COLOR_NONE}"
+        echo -e "${COLOR_ERROR}Invalid port. Please use the default port 443 !${COLOR_NONE}"
         PORT=443
     fi
 
@@ -147,38 +167,48 @@ create_cron_job(){
     # 写入前先检查，避免重复任务。
     if ! crontab_exists "certbot renew --force-renewal"; then
         echo "0 0 1 * * /usr/bin/certbot renew --force-renewal" >> /var/spool/cron/crontabs/root
-        echo "${COLOR_SUCC}成功安装证书renew定时作业！${COLOR_NONE}"
+        #echo "${COLOR_SUCC}成功安装证书renew定时作业！${COLOR_NONE}"
+        echo "${COLOR_SUCC}Succeed to start the cron job to renew license.${COLOR_NONE}"
     else
-        echo "${COLOR_SUCC}证书renew定时作业已经安装过！${COLOR_NONE}"
+        #echo "${COLOR_SUCC}证书renew定时作业已经安装过！${COLOR_NONE}"
+        echo "${COLOR_SUCC}The cron job of license renewal has been created.${COLOR_NONE}"
     fi
 
     if ! crontab_exists "docker restart gost"; then 
         echo "5 0 1 * * /usr/bin/docker restart gost" >> /var/spool/cron/crontabs/root
-        echo "${COLOR_SUCC}成功安装gost更新证书定时作业！${COLOR_NONE}"
+        #echo "${COLOR_SUCC}成功安装gost更新证书定时作业！${COLOR_NONE}"
+        echo "${COLOR_SUCC}Succeed to create the cron job of restarting gost${COLOR_NONE}"
     else
-        echo "${COLOR_SUCC}gost更新证书定时作业已经成功安装过！${COLOR_NONE}"
+        #echo "${COLOR_SUCC}gost更新证书定时作业已经成功安装过！${COLOR_NONE}"
+        echo "${COLOR_SUCC}The cron job of restarting gost is already there.${COLOR_NONE}"
     fi
 }
 
 install_shadowsocks(){
     if ! [ -x "$(command -v docker)" ]; then
-        echo -e "${COLOR_ERROR}未发现Docker，请求安装 Docker ! ${COLOR_NONE}" 
+        #echo -e "${COLOR_ERROR}未发现Docker，请求安装 Docker ! ${COLOR_NONE}" 
+        echo -e "${COLOR_ERROR}No Docker found，Please install Docker. ${COLOR_NONE}" 
         return
     fi
 
     if check_container ss ; then
-        echo -e "${COLOR_ERROR}ShadowSocks 容器已经在运行了，你可以手动停止容器，并删除容器，然后再执行本命令来重新安装 ShadowSocks。${COLOR_NONE}"
+        #echo -e "${COLOR_ERROR}ShadowSocks 容器已经在运行了，你可以手动停止容器，并删除容器，然后再执行本命令来重新安装 ShadowSocks。${COLOR_NONE}"
+        echo -e "${COLOR_ERROR}ShadowSocks container is running. You may manually stop the container and delete it. Then re-run the command to install ShadowSocks.${COLOR_NONE}"
         return
     fi
 
-    echo "准备启动 ShadowSocks 代理程序,为了安全,需要使用用户名与密码进行认证."
-    read -p "请输入你要使用的密码:" PASS
-    read -p "请输入ShadowSocks需要侦听的端口号(1984)：" PORT 
+    #echo "准备启动 ShadowSocks 代理程序,为了安全,需要使用用户名与密码进行认证."
+    echo "Ready to start ShadowSocks. For safty, it requires username/password."
+    #read -p "请输入你要使的密码:" PASS
+    read -p "Password:" PASS
+    #read -p "请输入ShadowSocks需要侦听的端口号(1984)：" PORT 
+    read -p "Please input the port# that SS listens to：" PORT 
 
     BIND_IP=0.0.0.0
 
     if [[ -z "${PORT// }" ]] || ! [[ "${PORT}" =~ ^[0-9]+$ ]] || ! [ "$PORT" -ge 1 -a "$PORT" -le 655535 ]; then
-        echo -e "${COLOR_ERROR}非法端口,使用默认端口 1984 !${COLOR_NONE}"
+        #echo -e "${COLOR_ERROR}非法端口,使用默认端口 1984 !${COLOR_NONE}"
+        echo -e "${COLOR_ERROR}Illegal port. Now use the default port 1984.${COLOR_NONE}"
         PORT=1984
     fi 
 
@@ -189,19 +219,24 @@ install_shadowsocks(){
 
 install_vpn(){
     if ! [ -x "$(command -v docker)" ]; then
-        echo -e "${COLOR_ERROR}未发现Docker，请求安装 Docker ! ${COLOR_NONE}" 
+        #echo -e "${COLOR_ERROR}未发现Docker，请求安装 Docker ! ${COLOR_NONE}" 
+        echo -e "${COLOR_ERROR}No Docker found，Please install Docker. ${COLOR_NONE}" 
         return
     fi
 
     if check_container vpn ; then
-        echo -e "${COLOR_ERROR}VPN 容器已经在运行了，你可以手动停止容器，并删除容器，然后再执行本命令来重新安装 VPN。${COLOR_NONE}"
+        #echo -e "${COLOR_ERROR}VPN 容器已经在运行了，你可以手动停止容器，并删除容器，然后再执行本命令来重新安装 VPN。${COLOR_NONE}"
+        echo -e "${COLOR_ERROR}VPN container is running. You may mannuall stop and delete that container. Then re-install the VPN。${COLOR_NONE}"
         return
     fi
 
-    echo "准备启动 VPN/L2TP 代理程序,为了安全,需要使用用户名与密码进行认证."
-    read -p "请输入你要使用的用户名:" USER
-    read -p "请输入你要使用的密码:" PASS
-    read -p "请输入你要使用的PSK Key:" PSK
+    #echo "准备启动 VPN/L2TP 代理程序,为了安全,需要使用用户名与密码进行认证."
+    echo "Ready to start VPN/L2TP. For safty, it requires username/password."
+    #read -p "请输入你要使用的用户名:" USER
+    read -p "Username:" USER
+    read -p "Password:" PASS
+    #read -p "请输入你要使用的PSK Key:" PSK
+    read -p "Please intput the PSK Key:" PSK
 
     sudo docker run -d --name vpn --privileged \
         -e PSK=${PSK} \
@@ -215,7 +250,8 @@ install_vpn(){
 
 install_brook(){
     brook_file="/usr/local/brook/brook"
-    [[ -e ${brook_file} ]] && echo -e "${COLOR_ERROR}Brook 已经安装，请检查!" && return
+    #[[ -e ${brook_file} ]] && echo -e "${COLOR_ERROR}Brook 已经安装，请检查!" && return
+    [[ -e ${brook_file} ]] && echo -e "${COLOR_ERROR}Brook has been installed. Please check!" && return
     wget -N --no-check-certificate https://raw.githubusercontent.com/ToyoDAdoubi/doubi/master/brook.sh &&\
         chmod +x brook.sh && sudo bash brook.sh
 }
@@ -230,21 +266,22 @@ init(){
     IFS=','    # New IFS
 
     COLUMNS=50
-    echo -e "\n菜单选项\n"
+    #echo -e "\n菜单选项\n"
+    echo -e "\nMenu\n"
 
     while [ 1 == 1 ]
     do
         PS3="Please select a option:"
         re='^[0-9]+$'
-        select opt in "安装 TCP BBR 拥塞控制算法" \
-                    "安装 Docker 服务程序" \
-                    "创建 SSL 证书" \
-                    "安装 Gost HTTP/2 代理服务" \
-                    "安装 ShadowSocks 代理服务" \
-                    "安装 VPN/L2TP 服务" \
-                    "安装 Brook 代理服务" \
-                    "创建证书更新 CronJob" \
-                    "退出" ; do
+        select opt in "Install TCP BBR traffic control" \
+                    "Install Docker " \
+                    "Create SSL license" \
+                    "Install Gost HTTP/2 Proxy service" \
+                    "Install ShadowSocks Proxy service" \
+                    "Install VPN/L2TP service" \
+                    "Install Brook Proxy service" \
+                    "Create the cron jobs to renew licenses" \
+                    "Exit" ; do
 
             if ! [[ $REPLY =~ $re ]] ; then
                 echo -e "${COLOR_ERROR}Invalid option. Please input a number.${COLOR_NONE}"
